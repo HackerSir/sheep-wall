@@ -33,8 +33,11 @@ def tshark interface: nil, capture_filter: nil, display_filter: nil, format: "fi
 
         @copy_thread = Thread.new do
           loop do
-            IO.copy_stream dumpio, sharkio
-            break if dumpio.closed? or sharkio.closed?
+            _r,_w,_e = IO.select [dumpio], [sharkio], nil, 1
+            IO.copy_stream dumpio, sharkio unless _r.empty? || _w.empty?
+          rescue IOError
+            puts "Stream closed"
+            break
           end
         end
 
