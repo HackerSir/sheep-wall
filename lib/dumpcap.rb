@@ -1,4 +1,4 @@
-
+require "open3"
 # wrap dumpcap command
 #
 # @param interface [String]
@@ -15,9 +15,9 @@ def dumpcap interface: "lo", filter: nil, output: "-", options: [], &block
   dumpcap_cmd += options
 
   if output == '-'
-    return IO.popen dumpcap_cmd, &block
+    return Open3.popen2 *dumpcap_cmd, &block
   else
-    return system dumpcap_cmd
+    return Open3.capture2 dumpcap_cmd
   end
 
 end
