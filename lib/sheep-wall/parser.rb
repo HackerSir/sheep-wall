@@ -8,6 +8,13 @@ module SheepWall
       def fields
         @fields ||= []
       end
+      def option name
+        @options << name
+      end
+      def options
+        @options ||= []
+      end
+
       def filter f = nil
         @filter = f if f
         @filter
@@ -25,6 +32,10 @@ module SheepWall
 
     def filter
       self.class.filter
+    end
+
+    def options
+      self.class.options
     end
 
     def fields

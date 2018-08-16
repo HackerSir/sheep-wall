@@ -27,6 +27,7 @@ module SheepWall
       parser.fields.each do |f|
         @fields<< [ f, parser]
       end
+      @options += parser.options
       @display_filter << parser.filter if parser.filter
       parser
     end
@@ -73,6 +74,10 @@ module SheepWall
       end
       @fields.each do |k,_|
         _shark_cmd += [ "-e", k ]
+      end
+
+      @options.each do |opt|
+        _shark_cmd += [ "-o", opt ]
       end
       [_dump_cmd, _shark_cmd]
     end
