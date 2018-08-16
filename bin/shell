@@ -7,4 +7,6 @@ Bundler.setup(:default,:development)
 require "redis"
 require "pry"
 
+$: << File.expand_path(File.join(File.dirname(__FILE__), "../lib"))
+
 Pry.start

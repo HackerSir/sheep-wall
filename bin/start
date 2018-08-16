@@ -7,69 +7,13 @@ require "bundler/setup"
 Bundler.setup(:default)
 
 require "redis"
-require "tshark"
+require "sheep-wall"
 
-def parser list
-  common = list.shift 3
-  list.reject { |pair| pair[1].nil? || pair[1].empty? }.group_by { |pair| pair[0].split(".")[0] }.each_pair do |k,v|
-    send "#{k}_parser", common + v
-  end
-end
+cap = SheepWall::Capture.new
+cap.add_parser SheepWall::Parser::FTPParser
+cap.add_parser SheepWall::Parser::SMTPParser
+cap.add_parser SheepWall::Parser::HTTPParser
+cap.add_parser SheepWall::Parser::IMAPParser
+cap.add_display SheepWall::Display
 
-def ftp_parser elements
-  p elements
-end
-
-def http_parser elements
-  p elements
-end
-
-def smtp_parser elements
-  p elements
-end
-
-def imap_parser elements
-  p elements
-end
-
-FIELDS = %w{
-  tcp.stream
-  ip.src_host
-  tcp.dstport
-  http.host
-  http.request.uri
-  http.request.uri.query
-  http.authorization
-  http.content_type
-  http.file_data
-  ftp.request.command
-  ftp.request.arg
-  smtp.auth.username_password
-  imap.request.command
-  imap.request
-}
-OPTIONS = %w{ -o wlan.enable_decryption:TRUE }
-
-tshark interface: ARGV[0] || "lo", capture_filter: "tcp", display_filter: '(http && http.request) || smtp || ( ftp && ( ftp.request.command ~ "USER" || ftp.request.command ~ "PASS") ) || ( imap && imap.request.command ~ "LOGIN" )', fields: FIELDS, options: OPTIONS do |io|
-  io.sync = true
-  @quit = false
-
-  Signal.trap 'INT' do
-    @quit = true
-  end
-
-  loop do
-    ra, _ = IO.select [io], nil, nil, 1
-    if @quit || $?
-      STDERR.puts "Terminating tshark..."
-      Process.kill 'TERM', io.pid
-      Process.wait
-      io.close
-      exit
-    elsif ra && ra.size > 0
-      line = io.gets
-      parser FIELDS.zip(line.chomp.split "\t") if line
-    end
-  end
-end
-
+cap.start
