@@ -8,6 +8,10 @@ module SheepWall
       def fields
         @fields ||= []
       end
+      def filter f = nil
+        @filter = f if f
+        @filter
+      end
     end
 
     def self.inherited klass
@@ -16,6 +20,11 @@ module SheepWall
     end
 
     def initialize queue
+      @queue = queue
+    end
+
+    def filter
+      self.class.filter
     end
 
     def fields
@@ -26,4 +35,8 @@ module SheepWall
     end
 
   end
+end
+
+%w{ftp_parser  http_parser  imap_parser  smtp_parser pop_parser}.each do |f|
+  require "sheep-wall/parser/" + f
 end
