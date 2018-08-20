@@ -9,7 +9,7 @@ Bundler.setup(:default)
 require "redis"
 require "sheep-wall"
 
-cap = SheepWall::Capture.new
+cap = SheepWall::Capture.new ARGV[0] || "lo"
 cap.add_parser SheepWall::Parser::FTPParser
 cap.add_parser SheepWall::Parser::SMTPParser
 cap.add_parser SheepWall::Parser::HTTPParser
