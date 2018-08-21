@@ -12,14 +12,15 @@ module SheepWall
       field 'http.request.uri.query'
       field 'http.authorization'
       field 'http.content_type'
+      field 'http.cookie_pair'
       field 'http.file_data'
 
       def parse flds
         res = {}
         res[:type] = "HTTP"
         res[:client] = flds["ip.src_host"]
-        res[:host] = flds["http.host"].split(":").first + ":" + flds["tcp.dstport"]
-        if flds['http.authorization'].size > 0
+        res[:host] = (flds["http.host"].nil? or flds["http.host"].empty?) ? "#{flds["ip.dst_host"]}:#{flds["tcp.dstport"]}" : flds["http.host"]
+        if flds['http.authorization'] and flds['http.authorization'].size > 0
           _res = res.dup
           t,v = flds['http.authorization'].split
           case t
@@ -41,7 +42,18 @@ module SheepWall
             @queue << _res
           elsif tok
             _res = res.dup
-            _res[:cred] = "token-" +tok.last
+            _res[:cred] = "token-" + tok.last
+            @queue << _res
+          end
+        end
+
+        if flds['http.cookie_pair'] and flds['http.cookie_pair'].size > 0
+          pairs = flds['http.cookie_pair'].split(',')
+                    .map { |pair| pair.split("=", 2) }
+                    .select { |k,_| ( k =~ /session/i or k =~ /id/i ) and k != "__cfduid" }
+          if pairs.size > 0
+            _res = res.dup
+            _res[:cred] = pairs.map { |pair| pair.join "=" }.join(";")
             @queue << _res
           end
         end
@@ -62,7 +74,7 @@ module SheepWall
             @queue << _res
           elsif tok
             _res = res.dup
-            _res[:cred] = "token-" + tok.last
+            _res[:cred] = tok.join("=")
             @queue << _res
           end
         end
