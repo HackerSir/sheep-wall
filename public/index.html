@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="/faye/client.js"></script>
+</head>
+<body>
+  <textarea id="result" style=" width: 600px; height: 300px;">
+  </textarea>
+  <script>
+    (function(w,d,faye){
+      var client = new faye.Client("/faye");
+      var output = document.querySelector("#result")
+      client.subscribe("/update", function(data){
+        output.textContent += new Date()
+        output.textContent += "\n\n" + data + "\n"
+      })
+    })(window,document,Faye)
+  </script>
+</body>
+</html>
