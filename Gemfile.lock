@@ -28,6 +28,7 @@ GEM
     http_parser.rb (0.6.0)
     method_source (0.9.0)
     multi_json (1.13.1)
+    permessage_deflate (0.1.4)
     pry (0.11.3)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
@@ -47,8 +48,10 @@ PLATFORMS
 DEPENDENCIES
   faye
   faye-websocket
+  permessage_deflate
   pry
   puma
+  rack
   rdoc
   redis
   yard
