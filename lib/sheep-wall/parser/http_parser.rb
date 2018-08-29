@@ -1,6 +1,7 @@
 require "sheep-wall/parser"
 require "base64"
 require "json"
+require "uri"
 
 module SheepWall
   class Parser
@@ -25,35 +26,36 @@ module SheepWall
           t,v = flds['http.authorization'].split
           case t
           when 'Basic'
-            _res[:cred] = Base64.decode64 v
+            u,pw = Base64.decode64(v).split(":")
+            _res[:cred] = "#{u}:#{mask pw}"
           else
-            _res[:cred] = v
+            _res[:cred] = mask v
           end
           @queue << _res
-        end
-
-        if flds['http.request.uri.query'] and flds['http.request.uri.query'].size > 0
-          args = flds['http.request.uri.query'].split("&").map { |pair| pair.split("=",2) }
-          u,pw = args.select { |pair| pair[0] =~ /username/i or pair[0] =~ /pass(word)?/ }
-          tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
-          if u and pw
-            _res = res.dup
-            _res[:cred] = "#{u.last}:#{pw.last}"
-            @queue << _res
-          elsif tok
-            _res = res.dup
-            _res[:cred] = "token-" + tok.last
-            @queue << _res
-          end
         end
 
         if flds['http.cookie_pair'] and flds['http.cookie_pair'].size > 0
           pairs = flds['http.cookie_pair'].split(',')
                     .map { |pair| pair.split("=", 2) }
-                    .select { |k,_| ( k =~ /session/i or k =~ /id/i ) and k != "__cfduid" }
+                    .select { |k,_| ( k =~ /session/i or k =~ /u((ser_?)?)?id/i or k =~ /s(ess(ion_?)?)?id/i ) and k != "__cfduid" }
           if pairs.size > 0
             _res = res.dup
-            _res[:cred] = pairs.map { |pair| pair.join "=" }.join(";")
+            _res[:cred] = pairs.map { |pair| "#{pair.first}=#{mask pair.last}" }.join(";")
+            @queue << _res
+          end
+        end
+
+        if flds['http.request.uri.query'] and flds['http.request.uri.query'].size > 0
+          args = flds['http.request.uri.query'].split("&").map { |pair| pair.split("=",2) }
+          params = args.select { |pair| pair[0] =~ /user(name)?/i or pair[0] =~ /txtID/i or pair[0] =~ /txtPW/i or pair[0] =~ /pass(word)?/i }
+          tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
+          if params.size > 0
+            _res = res.dup
+            _res[:cred] = params.map { |pair| "#{pair.first}=#{mask pair.last}"}.join("&")
+            @queue << _res
+          elsif tok
+            _res = res.dup
+            _res[:cred] = "token-" + mask(tok.last)
             @queue << _res
           end
         end
@@ -66,19 +68,27 @@ module SheepWall
           else
             return
           end
-          u,pw = args.select { |pair| pair[0] =~ /username/i or pair[0] =~ /pass(word)?/ }
+          params = args.select { |pair| pair[0] =~ /user(name)?/i or pair[0] =~ /txtID/i or pair[0] =~ /txtPW/i or pair[0] =~ /pass(word)?/i }
           tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
-          if u and pw
+          if params.size > 0
             _res = res.dup
-            _res[:cred] = "#{u.last}:#{pw.last}"
+            _res[:cred] = params.map { |pair| "#{pair.first}=#{mask pair.last}" }.join("&")
             @queue << _res
           elsif tok
             _res = res.dup
-            _res[:cred] = tok.join("=")
+            _res[:cred] = "#{tok.first}=#{mask tok.last}"
             @queue << _res
           end
         end
 
+      end
+
+      def mask str
+        l = str.size / 3
+        chr = str.size > 21 ? "." : "*"
+        trl = l > 7 ? 7 : l
+        str[l/2,l*2+1] = chr*trl*2 + chr
+        str
       end
 
     end
