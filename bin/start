@@ -10,24 +10,43 @@ require "redis"
 require "sheep-wall"
 require "digest"
 require "json"
+require "thread"
 
 class RedisPush
   def initialize
     @history = {}
     @timestamps = []
     @redis = Redis.new url: ENV['REDIS_URL']
+    @lock = Mutex.new
+    @purger = Thread.new do
+      loop do
+        @lock.synchronize do
+          expire
+        end
+      end
+    end
+  end
+
+  def expire
+    now = Time.now
+    old = @timestamps.select { |k,ts| now - ts >= 300 }
+    @timestamps -= old
+    old.each { |k,ts| @history.delete k }
   end
 
   def show entity
-    return if entity[:cred].empty?
-    return if @history.values.select { |v|
-      v[:host].split(":").first.split(".")[-2..-1].join(".") == entity[:host].split(":").first.split(".")[-2..-1].join(".") and
-      v[:cred] == entity[:cred]
-    }.size > 0
+    @lock.synchronize do
+      return if entity[:cred].empty?
+      return if @history.values.select { |v|
+        v[:host].split(":").first.split(".")[-2..-1].join(".") == entity[:host].split(":").first.split(".")[-2..-1].join(".") and
+        v[:cred] == entity[:cred]
+      }.size > 0
+    end
     fig = Digest::SHA1.hexdigest(entity.to_json)
     @history[fig] = entity
     @timestamps << [ fig , Time.now ]
     @redis.mapped_hmset fig, entity
+    @redis.expire fig, 300
     @redis.publish "new-sheep", fig
     p [fig, entity]
   end
