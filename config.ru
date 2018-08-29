@@ -28,6 +28,7 @@ def new_redis
   else
     redis = Redis.new
   end
+  redis
 end
 
 ws = Faye::RackAdapter.new mount: '/faye', ping: 5
@@ -62,6 +63,7 @@ Thread.new do
   listener, fetcher = new_redis(), new_redis()
   listener.subscribe("new-sheep") do |ev|
     ev.message do |channel, mesg|
+      p mesg
       ws.get_client.publish "/update", fetcher.hgetall(mesg).to_json
     end
   end

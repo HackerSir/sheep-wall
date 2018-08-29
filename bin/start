@@ -8,12 +8,36 @@ Bundler.setup(:default)
 
 require "redis"
 require "sheep-wall"
+require "digest"
+require "json"
+
+class RedisPush
+  def initialize
+    @history = {}
+    @timestamps = []
+    @redis = Redis.new url: ENV['REDIS_URL']
+  end
+
+  def show entity
+    return if entity[:cred].empty?
+    return if @history.values.select { |v|
+      v[:host].split(":").first.split(".")[-2..-1].join(".") == entity[:host].split(":").first.split(".")[-2..-1].join(".") and
+      v[:cred] == entity[:cred]
+    }.size > 0
+    fig = Digest::SHA1.hexdigest(entity.to_json)
+    @history[fig] = entity
+    @timestamps << [ fig , Time.now ]
+    @redis.mapped_hmset fig, entity
+    @redis.publish "new-sheep", fig
+    p [fig, entity]
+  end
+end
 
 cap = SheepWall::Capture.new ARGV[0] || "lo"
 cap.add_parser SheepWall::Parser::FTPParser
 cap.add_parser SheepWall::Parser::SMTPParser
 cap.add_parser SheepWall::Parser::HTTPParser
 cap.add_parser SheepWall::Parser::IMAPParser
-cap.add_display SheepWall::Display
+cap.add_display RedisPush
 
 cap.start
