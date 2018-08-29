@@ -6,17 +6,91 @@
   <title>Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="/faye/client.js"></script>
+  <style type="text/css" rel="stylesheet">
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #111;
+      color: #39ff41;
+    }
+
+    ul,li {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #main {
+      width: 60vw;
+      font-size: 20px;
+      margin: 3em auto 0 auto;
+    }
+
+    .list {
+      box-shadow: #39ff41 0 0 5px;
+    }
+
+    .item {
+      border: solid 2px #39ff41;
+      padding: 5px 10px;
+      box-shadow: inset #39ff41 0 0 5px;
+    }
+
+    .item:first-child {
+      border-radius: 4px 4px 0px 0px;
+    }
+
+    .item:last-child:not(:first-child) {
+      border-top: none;
+      border-radius: 0px 0px 4px 4px;
+    }
+
+    .item > div {
+      line-height: 2.5em;
+    }
+
+    li > .header {
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-around;
+      line-height: 2em;
+    }
+  </style>
 </head>
 <body>
-  <textarea id="result" style=" width: 600px; height: 300px;">
-  </textarea>
+  <div id="main">
+    <h1>Beep, Beep, I'm a sheep</h1>
+    <ul class="list">
+      <li class="item example">
+        <div class="header">
+          <div class="type">Protocol</div>
+          <div class="type">Source IP</div>
+          <div class="type">Target Host</div>
+        </div>
+        <div class="cred">UR Precious Data (Maybe)</div>
+      </li>
+    </ul>
+  </div>
   <script>
     (function(w,d,faye){
       var client = new faye.Client("/faye");
       var output = document.querySelector("#result")
+      var example = document.querySelector(".item.example")
+      var make_entry = function(entity){
+        var card = document.createElement("li")
+        card.classList.add("item")
+        var el = document.createElement("div")
+        el.classList.add("header")
+        el.innerHTML += '<div class="type">'+ entity.type +'</div>'
+        el.innerHTML += '<div class="client">'+ entity.client +'</div>'
+        el.innerHTML += '<div class="host">'+ entity.host +'</div>'
+        card.appendChild(el)
+        card.innerHTML += '<div class="cred">'+ entity.cred +'</div>'
+        return card
+      }
       client.subscribe("/update", function(data){
-        output.textContent += new Date()
-        output.textContent += "\n\n" + data + "\n"
+        var el = make_entry(JSON.parse(data))
+        document.querySelector(".list").insertBefore(el, example.nextSibling)
       })
     })(window,document,Faye)
   </script>
