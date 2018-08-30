@@ -21,7 +21,7 @@
     }
 
     #main {
-      width: 60vw;
+      max-width: 60vw;
       font-size: 20px;
       margin: 3em auto 0 auto;
     }
@@ -34,15 +34,30 @@
       border: solid 2px #39ff41;
       padding: 5px 10px;
       box-shadow: inset #39ff41 0 0 5px;
+      transition: all ease 1s;
+      height: auto;
+      opacity: 1;
+    }
+
+    .item.hidden {
+      opacity: 0;
+      height: 0px;
     }
 
     .item:first-child {
       border-radius: 4px 4px 0px 0px;
     }
 
-    .item:last-child:not(:first-child) {
+    .item + .item {
       border-top: none;
+    }
+
+    .item:last-child {
       border-radius: 0px 0px 4px 4px;
+    }
+
+    .item:only-child {
+      border-radius: 4px;
     }
 
     .item > div {
@@ -59,7 +74,7 @@
 </head>
 <body>
   <div id="main">
-    <h1>Beep, Beep, I'm a sheep</h1>
+    <h1>Beep, Beep, You're a sheep</h1>
     <ul class="list">
       <li class="item example">
         <div class="header">
@@ -90,7 +105,10 @@
       }
       client.subscribe("/update", function(data){
         var el = make_entry(JSON.parse(data))
+        el.classList.add("hidden")
         document.querySelector(".list").insertBefore(el, example.nextSibling)
+        el.classList.remove("hidden")
+        //window.requestAnimationFrame( () => el.classList.remove("hidden") )
       })
     })(window,document,Faye)
   </script>
