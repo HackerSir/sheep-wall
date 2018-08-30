@@ -16,13 +16,14 @@ class RedisPush
   def initialize
     @history = {}
     @timestamps = []
-    @redis = Redis.new url: ENV['REDIS_URL']
+    @redis = Redis.new url: ENV['REDIS_URL'] if ENV.key? "REDIS_URL"
     @lock = Mutex.new
     @purger = Thread.new do
       loop do
         @lock.synchronize do
           expire
         end
+        sleep 60
       end
     end
   end
@@ -45,15 +46,18 @@ class RedisPush
     fig = Digest::SHA1.hexdigest(entity.to_json)
     @history[fig] = entity
     @timestamps << [ fig , Time.now ]
-    @redis.mapped_hmset fig, entity
-    @redis.expire fig, 300
-    @redis.publish "new-sheep", fig
+    if @redis
+      @redis.mapped_hmset fig, entity
+      @redis.expire fig, 300
+      @redis.publish "new-sheep", fig
+    end
     p [fig, entity]
   end
 end
 
-cap = SheepWall::Capture.new ARGV[0] || "lo"
+cap = SheepWall::Capture.new ARGV[0] || "lo", ARGV[1] || "tcp"
 cap.options << "wlan.enable_decryption:TRUE"
+cap.options += File.readlines(ARGV[2]).map(&:chomp).reject(&:empty?) if ARGV[2]
 cap.add_parser SheepWall::Parser::FTPParser
 cap.add_parser SheepWall::Parser::SMTPParser
 cap.add_parser SheepWall::Parser::HTTPParser
