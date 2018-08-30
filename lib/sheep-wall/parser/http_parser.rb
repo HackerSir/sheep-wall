@@ -37,7 +37,7 @@ module SheepWall
         if flds['http.cookie_pair'] and flds['http.cookie_pair'].size > 0
           pairs = flds['http.cookie_pair'].split(',')
                     .map { |pair| pair.split("=", 2) }
-                    .select { |k,_| ( k =~ /session/i or k =~ /u((ser_?)?)?id/i or k =~ /s(ess(ion_?)?)?id/i ) and k != "__cfduid" }
+                    .select { |k,_| ( k =~ /session/i or k =~ /([u_]|\b)u((ser_?)?)?id/i or k =~ /(_|\b)s(ess(ion_?)?)?id/i ) and k != "__cfduid" }
           if pairs.size > 0
             _res = res.dup
             _res[:cred] = pairs.map { |pair| "#{URI.unescape pair.first}=#{mask pair.last}" }.join(";")
@@ -68,7 +68,7 @@ module SheepWall
           else
             return
           end
-          params = args.select { |pair| pair[0] =~ /user(name)?/i or pair[0] =~ /txtID/i or pair[0] =~ /txtPW/i or pair[0] =~ /pass(word)?/i }
+          params = args.select { |pair| pair[0] =~ /user(name)?/i or pair[0] =~ /ID\b/i or pair[0] =~ /PW\b/i or pair[0] =~ /pass(word)?/i }
           tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
           if params.size > 0
             _res = res.dup
@@ -84,6 +84,7 @@ module SheepWall
       end
 
       def mask str
+        return "(none)" if str.size == 0
         l = str.size / 3
         chr = str.size > 21 ? "." : "*"
         trl = l > 7 ? 7 : l
