@@ -67,6 +67,11 @@ module SheepWall
     def build_command
       _dump_cmd = [DEFAULT_DUMP] + %w{ -n -q -w - } + [ "-i", @interface, "-f", @capture_filter ]
       _shark_cmd = [DEFAULT_SHARK] + %w{ -r - -l }
+
+      @options.each do |opt|
+        _shark_cmd += [ "-o", opt ]
+      end
+
       _shark_cmd += [ "-Y", @display_filter.map { |df| "( " + df + " )" }.join(" || ") ] unless @display_filter.empty?
       _shark_cmd += %w{ -Tfields }
       COMMON_FIELDS.each do |k|
@@ -74,10 +79,6 @@ module SheepWall
       end
       @fields.each do |k,_|
         _shark_cmd += [ "-e", k ]
-      end
-
-      @options.each do |opt|
-        _shark_cmd += [ "-o", opt ]
       end
       [_dump_cmd, _shark_cmd]
     end
