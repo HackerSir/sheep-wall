@@ -53,6 +53,7 @@ class RedisPush
 end
 
 cap = SheepWall::Capture.new ARGV[0] || "lo"
+cap.options << "wlan.enable_decryption:TRUE"
 cap.add_parser SheepWall::Parser::FTPParser
 cap.add_parser SheepWall::Parser::SMTPParser
 cap.add_parser SheepWall::Parser::HTTPParser
