@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -x
+
+#export REDIS_URL="redis://127.0.0.2/6"
+
+tmux new-session -d -s kiosk read
+tmux set-option -t kiosk -ga update-environment " REDIS_URL"
+tmux new-window -t kiosk bin/puma config.ru
+tmux new-window -t kiosk sudo create_ap -w 2 --ieee80211n --ieee80211ac --country TW --freq-band 2.4 $1 $2 hackersir_exhibit hackersir_exhibit
+tmux a
+tmux new-window -t kiosk bin/start $1
+tmux a
