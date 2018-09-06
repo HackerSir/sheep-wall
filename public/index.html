@@ -97,11 +97,29 @@
         card.classList.add("item")
         var el = document.createElement("div")
         el.classList.add("header")
-        el.innerHTML += '<div class="type">'+ entity.type +'</div>'
-        el.innerHTML += '<div class="client">'+ entity.client +'</div>'
-        el.innerHTML += '<div class="host">'+ entity.host +'</div>'
+
+        var data = document.createElement("span")
+        data.classList.add("type")
+        data.textContent = entity.type
+        el.appendChild(data)
+
+        var data = document.createElement("span")
+        data.classList.add("client")
+        data.textContent = entity.client
+        el.appendChild(data)
+
+        var data = document.createElement("span")
+        data.classList.add("host")
+        data.textContent = entity.host
+        el.appendChild(data)
+
         card.appendChild(el)
-        card.innerHTML += '<div class="cred">'+ entity.cred +'</div>'
+
+        var data = document.createElement("span")
+        data.classList.add("cred")
+        data.textContent = entity.cred
+        card.appendChild(data)
+
         return card
       }
       client.subscribe("/update", function(data){
