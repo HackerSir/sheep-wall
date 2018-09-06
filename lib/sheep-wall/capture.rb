@@ -49,8 +49,11 @@ module SheepWall
           begin
             flds = out.readline.chomp.split("\t")
             common = COMMON_FIELDS.zip flds.shift(COMMON_FIELDS.size)
-            grp = flds.zip(fields).reject { |pair| pair.first.nil? or pair.first.empty? }.group_by { |pair| pair.last.last }
+
+            # FIXME: flds length may sometimes mismatch with fields, need further inspectation
+            grp = flds.zip(fields).reject { |pair| pair.first.nil? or pair.first.empty? }.group_by { |pair| pair.flatten.last }
             grp.map do |k,bulk| # parser => [ field, [ name, parser ] ]
+              next if k.nil?
               k.parse Hash[common + bulk.map { |v| v.flatten[0..1].reverse }]
             end
           
