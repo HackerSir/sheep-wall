@@ -61,7 +61,19 @@ cap.options += File.readlines(ARGV[2]).map(&:chomp).reject(&:empty?) if ARGV[2]
 cap.add_parser SheepWall::Parser::FTPParser
 cap.add_parser SheepWall::Parser::SMTPParser
 cap.add_parser SheepWall::Parser::HTTPParser
-cap.add_parser SheepWall::Parser::IMAPParser
+#cap.add_parser SheepWall::Parser::IMAPParser
 cap.add_display RedisPush
 
-cap.start
+begin
+
+  loop { cap.start }
+
+  rescue Interrupt
+    exit
+
+  rescue Exception => e
+    p e
+    sleep 1
+    retry
+
+end
