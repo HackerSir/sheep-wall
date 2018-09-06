@@ -40,7 +40,7 @@ module SheepWall
                     .select { |k,_| ( k =~ /session/i or k =~ /([u_]|\b)u((ser_?)?)?id/i or k =~ /(_|\b)s(ess(ion_?)?)?id/i ) and k != "__cfduid" }
           if pairs.size > 0
             _res = res.dup
-            _res[:cred] = pairs.map { |pair| "#{URI.unescape pair.first}=#{mask pair.last}" }.join(";")
+            _res[:cred] = pairs.map { |pair| "#{URI.unescape pair.first}=#{mask URI.unescape pair.last}" }.join(";")
             @queue << _res
           end
         end
@@ -51,7 +51,7 @@ module SheepWall
           tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
           if params.size > 0
             _res = res.dup
-            _res[:cred] = params.map { |pair| "#{URI.unescape pair.first}=#{mask pair.last}"}.join("&")
+            _res[:cred] = params.map { |pair| "#{URI.unescape pair.first}=#{mask URI.unescape pair.last}"}.join("&")
             @queue << _res
           elsif tok
             _res = res.dup
@@ -72,11 +72,11 @@ module SheepWall
           tok,_ = args.select { |pair| pair[0] =~ /auth.+token/i }
           if params.size > 0
             _res = res.dup
-            _res[:cred] = params.map { |pair| "#{URI.unescape pair.first}=#{mask pair.last}" }.join("&")
+            _res[:cred] = params.map { |pair| "#{URI.unescape pair.first}=#{mask URI.unescape pair.last}" }.join("&")
             @queue << _res
           elsif tok
             _res = res.dup
-            _res[:cred] = "#{URI.unescape tok.first}=#{mask tok.last}"
+            _res[:cred] = "#{URI.unescape tok.first}=#{mask URI.unescape tok.last}"
             @queue << _res
           end
         end
